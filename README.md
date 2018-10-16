@@ -1,4 +1,4 @@
-# jGECK
+# jGECK [![Build Status](https://travis-ci.com/JanSimek/jGECK.svg?branch=master)](https://travis-ci.com/JanSimek/jGECK)
 
 Garden of Eden Creation Kit - map editor for Fallout 2 (or one day it will be)
 
