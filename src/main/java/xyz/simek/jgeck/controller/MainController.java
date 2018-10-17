@@ -5,8 +5,6 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ResourceBundle;
 import java.util.zip.DataFormatException;
 
@@ -16,13 +14,13 @@ import org.controlsfx.glyphfont.GlyphFontRegistry;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.reactfx.Subscription;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
@@ -32,9 +30,10 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import xyz.simek.jgeck.model.CodeHighlighter;
 import xyz.simek.jgeck.model.DatFile;
 import xyz.simek.jgeck.model.DatItem;
+import xyz.simek.jgeck.model.Highlighter;
+import xyz.simek.jgeck.model.IniHighlighter;
 import xyz.simek.jgeck.model.format.FrmHeader;
 
 public class MainController implements Initializable {
@@ -55,9 +54,10 @@ public class MainController implements Initializable {
 	@FXML
 	private BorderPane mainPane;
 
-	//private TextArea textArea = new TextArea();
+	private TextArea textArea = new TextArea();
 	private CodeArea codeEditor = new CodeArea();
-
+	private Highlighter highlighter;
+	
 	private GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
 
 	private DatFile datFile = null;
@@ -81,21 +81,6 @@ public class MainController implements Initializable {
 		TreeItem<String> root = new TreeItem<>();
 		fileTree.setRoot(root);
 
-		// FIXME: async, memory leak
-        // recompute the syntax highlighting 500 ms after user stops editing area
-        Subscription cleanupWhenNoLongerNeedIt = codeEditor
-
-                // plain changes = ignore style changes that are emitted when syntax highlighting is reapplied
-                // multi plain changes = save computation by not rerunning the code multiple times
-                //   when making multiple changes (e.g. renaming a method at multiple parts in file)
-                .multiPlainChanges()
-
-                // do not emit an event until 250 ms have passed since the last emission of previous stream
-                .successionEnds(Duration.ofMillis(250))
-
-                // run the following code block when previous stream emits an event
-                .subscribe(ignore -> codeEditor.setStyleSpans(0, CodeHighlighter.computeHighlighting(codeEditor.getText())));
-        
 		fileTree.setOnMouseClicked(e -> {
 			
 			if (fileTree.getSelectionModel().getSelectedItem() == null)
@@ -115,20 +100,25 @@ public class MainController implements Initializable {
 			
 			String extension = getFileExtension(filename);
 			switch (extension) {
+			case "BIO":					
+				//textArea.setText(new String(file.getData()));
+
 			case "TXT":
-			case "MSG":
-			case "SVE":
-			case "GAM":
+			case "MSG": // TODO: MsgHighlighter
+			case "SVE": // TODO: SveHighlighter
+			case "GAM": // TODO: GamHighlighter
 			case "BAK":
 			case "LST":
-			case "BIO":
 				try {
 					codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
 
 			        VirtualizedScrollPane<CodeArea> vPane = new VirtualizedScrollPane<>(codeEditor);
-			        vPane.getStylesheets().add(getClass().getClassLoader().getResource("highlight.css").toExternalForm());
+			        
+			        highlighter = new IniHighlighter(codeEditor);        
+			        highlighter.highlight();
+			        
 			        codeEditor.replaceText(new String(file.getData()));
-					//textArea.setText(new String(file.getData()));
+			        			        
 					vPane.scrollToPixel(0.0, 0.0);
 					
 					mainPane.setCenter(vPane);
@@ -302,7 +292,6 @@ public class MainController implements Initializable {
     	FileChooser fileChooser = new FileChooser();
     	fileChooser.setTitle("Open Fallout 2 DAT File");
     	fileChooser.getExtensionFilters().add(new ExtensionFilter("Fallout 2 DAT files", "*.dat"));
-    	fileChooser.setInitialDirectory(Paths.get("C:\\Users\\jan.simek\\Documents\\Java Bootcamp\\jgeck\\FALLOUT 2").toFile());
     	File datFile = fileChooser.showOpenDialog(new Stage());
     	
     	if(datFile != null)

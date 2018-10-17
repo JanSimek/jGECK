@@ -1,27 +1,30 @@
+/*********************************
+ * SSL files                     *
+ *********************************/
 .keyword {
     -fx-fill: purple;
     -fx-font-weight: bold;
 }
-.key {
-    -fx-fill: red;
-}
-.value {
-    -fx-fill: blue;
-}
-.paren {
-    -fx-fill: firebrick;
-    -fx-font-weight: bold;
-}
-.bracket {
+
+/*********************************
+ * INI files                     *
+ *********************************/
+.ini_section {
     -fx-fill: darkblue;
     -fx-font-weight: bold;
 }
-.brace {
-    -fx-fill: teal;
-    -fx-font-weight: bold;
+.ini_key {
+    -fx-fill: red;
 }
-.string {
+.ini_value {
     -fx-fill: blue;
+}
+
+/*********************************
+ * Common                        *
+ *********************************/
+.string {
+    -fx-fill: green;
 }
 
 .comment {
