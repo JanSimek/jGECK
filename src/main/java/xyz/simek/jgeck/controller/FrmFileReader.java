@@ -1,28 +1,12 @@
 package xyz.simek.jgeck.controller;
 
 import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import xyz.simek.jgeck.model.format.FrmFrame;
 import xyz.simek.jgeck.model.format.FrmHeader;
 
 public class FrmFileReader {
-
-	public static FrmHeader readFrm(String file) {
-		FrmHeader header = new FrmHeader();
-		try {
-			DataInputStream dis = getDataInputstream(file);
-			readHeader(header, dis);
-			readFrames(header, dis);
-			closeDataInputStream(dis);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return header;
-	}
-	
 
 	public static FrmHeader readFrm(DataInputStream dis) {
 		FrmHeader header = new FrmHeader();
@@ -85,18 +69,8 @@ public class FrmFileReader {
 		frame.setWidth((short) dis.readUnsignedShort());
 	}
 
-	private static void closeDataInputStream(DataInputStream dis) throws IOException {
-		dis.close();
-	}
-
 	private static void readFrameDataSize(FrmHeader header, DataInputStream dis) throws IOException {
 		header.setFrameDataSize(dis.readInt());
-	}
-
-	private static DataInputStream getDataInputstream(String file) throws FileNotFoundException {
-		FileInputStream fis = new FileInputStream(file);
-		DataInputStream dis = new DataInputStream(fis);
-		return dis;
 	}
 
 	private static void readVersion(FrmHeader header, DataInputStream dis) throws IOException {

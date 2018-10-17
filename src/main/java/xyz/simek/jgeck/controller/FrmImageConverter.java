@@ -34,7 +34,7 @@ public class FrmImageConverter {
 			ex.printStackTrace();
 		}
 		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-		return new javafx.scene.image.Image(in);
+		return new Image(in);
 	}
 
 	public static Image getJavaFXImageWithColorCycle(byte[] rawPixels, int width, int height, int offset,
@@ -48,7 +48,7 @@ public class FrmImageConverter {
 			ex.printStackTrace();
 		}
 		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-		return new javafx.scene.image.Image(in);
+		return new Image(in);
 
 	}
 

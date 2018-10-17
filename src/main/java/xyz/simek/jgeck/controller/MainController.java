@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ResourceBundle;
 import java.util.zip.DataFormatException;
 
@@ -20,11 +21,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -35,6 +38,7 @@ import xyz.simek.jgeck.model.DatItem;
 import xyz.simek.jgeck.model.Highlighter;
 import xyz.simek.jgeck.model.IniHighlighter;
 import xyz.simek.jgeck.model.format.FrmHeader;
+import xyz.simek.jgeck.model.format.RixImage;
 
 public class MainController implements Initializable {
 
@@ -54,7 +58,6 @@ public class MainController implements Initializable {
 	@FXML
 	private BorderPane mainPane;
 
-	private TextArea textArea = new TextArea();
 	private CodeArea codeEditor = new CodeArea();
 	private Highlighter highlighter;
 	
@@ -100,9 +103,7 @@ public class MainController implements Initializable {
 			
 			String extension = getFileExtension(filename);
 			switch (extension) {
-			case "BIO":					
-				//textArea.setText(new String(file.getData()));
-
+			case "BIO":
 			case "TXT":
 			case "MSG": // TODO: MsgHighlighter
 			case "SVE": // TODO: SveHighlighter
@@ -145,6 +146,26 @@ public class MainController implements Initializable {
 				}
 				break;
 
+			case "RIX":
+				ByteBuffer buff = null;
+				try {
+					buff = ByteBuffer.wrap(file.getData());
+				} catch (DataFormatException | IOException e1) {
+					e1.printStackTrace();
+				}
+				
+				RixImage rix = new RixImage();
+				rix.read(buff);
+				WritableImage img = new WritableImage(rix.getWidth(), rix.getHeight());
+				PixelWriter pw = img.getPixelWriter();
+				pw.setPixels(0, 0, rix.getWidth(), rix.getHeight(), PixelFormat.getIntArgbPreInstance(), rix.getData(), 0, rix.getWidth());
+				
+				ImageView view = new ImageView();
+				view.setImage(img);
+				mainPane.setCenter(view);
+
+				break;
+				
 			default:
 				infoLabel = new Label("Preview for this filetype is not available.");
 				infoLabel.setTextFill(Color.RED);
@@ -176,7 +197,7 @@ public class MainController implements Initializable {
 			}
 		});
 	}
-    
+	
 	/**
 	 * Helper method for creating hierarchical representation of files in the DAT
 	 * archive
