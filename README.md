@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6ea21e9d1d3641729f17edf08be324ff)](https://app.codacy.com/app/JanSimek/jGECK?utm_source=github.com&utm_medium=referral&utm_content=JanSimek/jGECK&utm_campaign=Badge_Grade_Dashboard)
 # jGECK [![Build Status](https://travis-ci.com/JanSimek/jGECK.svg?branch=master)](https://travis-ci.com/JanSimek/jGECK)
 
 Garden of Eden Creation Kit - map editor for Fallout 2 (or one day it will be)
