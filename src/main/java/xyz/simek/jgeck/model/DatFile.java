@@ -59,7 +59,7 @@ public class DatFile {
 				item.setDatFile(this);
 
 				items.put(item.getName(), item);
-				System.out.println("item " + (i+1) + " of " + totalFiles);
+				//System.out.println("item " + (i+1) + " of " + totalFiles);
 			}
 		}
 	}

@@ -9,16 +9,15 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.zip.DataFormatException;
 
 import org.controlsfx.glyphfont.Glyph;
 import org.controlsfx.glyphfont.GlyphFont;
 import org.controlsfx.glyphfont.GlyphFontRegistry;
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,7 +25,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
@@ -42,11 +40,11 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import xyz.simek.jgeck.model.DatFile;
 import xyz.simek.jgeck.model.DatItem;
-import xyz.simek.jgeck.model.Highlighter;
-import xyz.simek.jgeck.model.IniHighlighter;
 import xyz.simek.jgeck.model.format.FrmHeader;
 import xyz.simek.jgeck.model.format.MapFormat;
 import xyz.simek.jgeck.model.format.RixImage;
+import xyz.simek.jgeck.view.CodeEditorPane;
+import xyz.simek.jgeck.view.ImagePane;
 
 public class MainController implements Initializable {
 	
@@ -65,9 +63,6 @@ public class MainController implements Initializable {
     
 	@FXML
 	private BorderPane mainPane;
-
-	private CodeArea codeEditor = new CodeArea();
-	private Highlighter highlighter;
 	
 	private GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
 
@@ -87,8 +82,6 @@ public class MainController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 
-		openButton.setGraphic(fontAwesome.create("FOLDER_OPEN"));
-		exportButton.setGraphic(fontAwesome.create("SAVE"));
 	}
 	
 	private void loadDatFile(String path) {
@@ -102,7 +95,7 @@ public class MainController implements Initializable {
 		fileTree.setShowRoot(false);
 		TreeItem<String> root = new TreeItem<>();
 		fileTree.setRoot(root);
-
+		
 		fileTree.setOnMouseClicked(e -> {
 			
 			if (fileTree.getSelectionModel().getSelectedItem() == null)
@@ -119,6 +112,13 @@ public class MainController implements Initializable {
 				System.err.println("File not found: " + filename);
 				return;
 			}
+
+			ByteBuffer buff = null;
+			try {
+				buff = ByteBuffer.wrap(file.getData());
+			} catch (DataFormatException | IOException ex) {
+				ex.printStackTrace();
+			}
 			
 			String extension = getFileExtension(filename);
 			switch (extension) {
@@ -129,78 +129,40 @@ public class MainController implements Initializable {
 			case "GAM": // TODO: GamHighlighter
 			case "BAK":
 			case "LST":
-				try {
-					codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
-
-			        VirtualizedScrollPane<CodeArea> vPane = new VirtualizedScrollPane<>(codeEditor);
-			        
-			        highlighter = new IniHighlighter(codeEditor);        
-			        highlighter.highlight();
-			        
-			        codeEditor.replaceText(new String(file.getData()));
-			        			        
-					vPane.scrollToPixel(0.0, 0.0);
-					
-					mainPane.setCenter(vPane);
-					
-				} catch (DataFormatException | IOException ex) {
-					System.err.println("Could not get item data: " + ex.getMessage());
-					infoLabel = new Label("Could not get item data: " + ex.getMessage());
-					infoLabel.setTextFill(Color.RED);
-					mainPane.setCenter(infoLabel);
-				}
+				mainPane.setCenter(new CodeEditorPane(new String(buff.array())));
 				break;
 
 			case "FRM":
 				try (DataInputStream is = new DataInputStream(new ByteArrayInputStream(file.getData()))) {
-					FrmHeader frm = FrmFileReader.readFrm(is);
-
-					Image image = frm.getImage(0, 0, true);
-					ImageView view = new ImageView();
-					view.setImage(image);
-					mainPane.setCenter(view);
+					FrmHeader frm = FrmFileReader.readFrm(is);				
+					mainPane.setCenter(new ImagePane(frm.getImage(0, 0, true)));
 
 				} catch (Exception ex) {
-					System.err.println("Could not access item data: " + ex.getMessage());
+					setInfoMessage("Could not access item data: " + ex.getMessage(), Color.RED);
 				}
 				break;
 
 			case "RIX":
-				ByteBuffer buff = null;
-				try {
-					buff = ByteBuffer.wrap(file.getData());
-				} catch (DataFormatException | IOException e1) {
-					e1.printStackTrace();
-				}
 				
 				RixImage rix = new RixImage();
 				rix.read(buff);
 				WritableImage img = new WritableImage(rix.getWidth(), rix.getHeight());
 				PixelWriter pw = img.getPixelWriter();
 				pw.setPixels(0, 0, rix.getWidth(), rix.getHeight(), PixelFormat.getIntArgbPreInstance(), rix.getData(), 0, rix.getWidth());
-				
-				ImageView view = new ImageView();
-				view.setImage(img);
-				mainPane.setCenter(view);
+
+				mainPane.setCenter(new ImagePane(img));
 
 				break;
 				
 			case "MAP":
 				// TODO: highlight selected: https://stackoverflow.com/questions/30625039/set-border-around-imageview-with-no-background-in-javafx
 				
-				ByteBuffer buff2 = null;
-				try {
-					buff2 = ByteBuffer.wrap(file.getData());
-				} catch (DataFormatException | IOException e1) {
-					e1.printStackTrace();
-				}
 				MapFormat map = new MapFormat();
-				map.read(buff2);
+				map.read(buff);
 				
 				DatItem tileList = datFile.getItems().get("art\\tiles\\TILES.LST");
 
-				ScrollPane sp = new ScrollPane();
-				
+				ScrollPane sp = new ScrollPane();	
 				Pane tileMap = new Pane();
 
 				try(BufferedReader bf = new BufferedReader(
@@ -212,8 +174,9 @@ public class MainController implements Initializable {
 						names.add(name);
 					}
 
-					map.getTiles().forEach((k, v) -> {
-						if(k == map.getDefaultElevation()) {
+					map.getTiles().forEach((elevation, v) -> {
+
+							Map<String, Image> tiles = new HashMap<>();
 							
 							for(int i = 0; i < 100*100; i++) {
 								if(v.get(i) == 1) continue;
@@ -222,29 +185,31 @@ public class MainController implements Initializable {
 
 								DatItem tile = datFile.getItems().get("art\\tiles\\" + names.get(v.get(i)));
 								
-								try (DataInputStream is = new DataInputStream(new ByteArrayInputStream(tile.getData()))) {
-									
-									FrmHeader frm = FrmFileReader.readFrm(is);
+								Image image = tiles.get(names.get(v.get(i)));
 
-									Image image = frm.getImage(0, 0, false);
-									System.out.println("Size: " + image.getWidth() + "x" + image.getHeight());
-									ImageView tileView = new ImageView();
-									tileView.setImage(image);
-									
-									int tileX = (int) Math.ceil(((double) i) / 100); // FIXME: possibly wrong
-									int tileY = i % 100;
-									int x = (100 - tileY - 1) * 48 + 32 * (tileX - 1);
-									int y = tileX * 24 + (tileY - 1) * 12 + 1;
-
-									tileView.setTranslateX(x);
-									tileView.setTranslateY(y);
-									tileMap.getChildren().add(tileView);
-
-								} catch (Exception ex) {
-									System.err.println("Could not access item data: " + ex.getMessage());
+								if(image == null) {				
+									try (DataInputStream is = new DataInputStream(new ByteArrayInputStream(tile.getData()))) {
+										
+										FrmHeader frm = FrmFileReader.readFrm(is);
+										image = frm.getImage(0, 0, false);
+										tiles.put(names.get(v.get(i)), image);
+									} catch (Exception ex) {
+										setInfoMessage("Could not access item data: " + ex.getMessage(), Color.RED);
+									}
 								}
+								
+								ImageView tileView = new ImageView();
+								tileView.setImage(image);
+								
+								int tileX = (int) Math.ceil(((double) i) / 100); // FIXME: possibly wrong
+								int tileY = i % 100;
+								int x = (100 - tileY - 1) * 48 + 32 * (tileX - 1);
+								int y = tileX * 24 + (tileY - 1) * 12 + 1;
+
+								tileView.setTranslateX(x);
+								tileView.setTranslateY(y);
+								tileMap.getChildren().add(tileView);
 							}
-						}
 					});
 					
 				} catch (IOException | DataFormatException e1) {
@@ -259,19 +224,21 @@ public class MainController implements Initializable {
 				sp.setPannable(true);
 				
 				//sp.setFitToHeight(true);
-				sp.setHbarPolicy(ScrollBarPolicy.ALWAYS);
-				sp.setVbarPolicy(ScrollBarPolicy.ALWAYS);
+				//sp.setHbarPolicy(ScrollBarPolicy.ALWAYS);
+				//sp.setVbarPolicy(ScrollBarPolicy.ALWAYS);
 				tileMap.setMinHeight(h);
 				tileMap.setMinWidth(w);
+				
 				sp.setContent(tileMap);
+				sp.setHvalue(0.5);
+				sp.setVvalue(0.5);
+				
 				mainPane.setCenter(sp);
 
 				break;
 				
 			default:
-				infoLabel = new Label("Preview for this filetype is not available.");
-				infoLabel.setTextFill(Color.RED);
-				mainPane.setCenter(infoLabel);
+				setInfoMessage("Preview for this filetype is not available.", Color.RED);
 				break;
 			}
 		});
@@ -421,4 +388,11 @@ public class MainController implements Initializable {
     		loadDatFile(datFile.toString());
     }
 	
+    private void setInfoMessage(String msg, Color color) {
+
+		infoLabel = new Label(msg);
+		infoLabel.setTextFill(Color.RED);
+		mainPane.setCenter(infoLabel);
+    }
+    
 }
