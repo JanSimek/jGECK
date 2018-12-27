@@ -1,4 +1,4 @@
-package xyz.simek.jgeck.model.format;
+package xyz.simek.jgeck.model.format.frm;
 
 import java.awt.image.IndexColorModel;
 import java.io.DataInputStream;

@@ -1,7 +1,6 @@
-package xyz.simek.jgeck.model.format;
+package xyz.simek.jgeck.model.format.map;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,15 +14,20 @@ public class MapFormat {
 	private int defaultElevation;
 	private int playerOrientation;
 	private int numLocalVars;
-	private int scriptId; // Value of -1 means no map. Text string is found in MSG file scrname.msg at index [id + 101].
-	private int elevations = 0;
-	/*
-	 	If (flag & 0x1) == 0 then ?? unknown.
-		If (flag & 0x2) == 0 then the map has an defaultElevation at level 0.
-		If (flag & 0x4) == 0 then the map has an defaultElevation at level 1.
-		If (flag & 0x8) == 0 then the map has an defaultElevation at level 2.
+	
+	/**
+	 * Value of -1 means no map. Text string is found in MSG file scrname.msg at index [id + 101].
 	 */
-	private int darkness; // UNUSED
+	private int scriptId; 
+	
+	/**
+	 * If (flag & 0x1) == 0 then ?? unknown.
+	 * If (flag & 0x2) == 0 then the map has an defaultElevation at level 0.
+	 * If (flag & 0x4) == 0 then the map has an defaultElevation at level 1.
+	 * If (flag & 0x8) == 0 then the map has an defaultElevation at level 2.
+	 */
+	private int elevations = 0;
+	//private int darkness; // UNUSED
 	private int numGlobalVars;
 	private int mapId;
 	/*
@@ -151,7 +155,8 @@ public class MapFormat {
 		if((elevationFlags & 4) == 0) elevations++;
 		if((elevationFlags & 8) == 0) elevations++;
 		
-		darkness = buff.getInt(); // Unused
+		//darkness = buff.getInt(); // Unused
+		buff.getInt();
 		
 		numGlobalVars = buff.getInt();
 		mapId = buff.getInt();
@@ -159,9 +164,9 @@ public class MapFormat {
 		
 		buff.position(buff.position() + 4*44); // Unknown
 		
-		// TODO global vars
+		// TODO: skip global vars
 		buff.position(buff.position() + 4*numGlobalVars);
-		// TODO: local vars
+		// TODO: skip local vars
 		buff.position(buff.position() + 4*numLocalVars);
 				
 		// TILES
@@ -176,7 +181,6 @@ public class MapFormat {
 				buff.getShort();
 				Short tile = buff.getShort();
 				tiles.get(elevation).add(tile);
-				//System.out.println("Tile: " + tile);
 			}
 		}
 	}

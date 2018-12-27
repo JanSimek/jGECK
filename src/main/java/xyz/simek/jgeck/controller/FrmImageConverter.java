@@ -15,8 +15,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import javafx.scene.image.Image;
-import xyz.simek.jgeck.model.format.ColorCycleOffset;
-import xyz.simek.jgeck.model.format.FoPalette;
+import xyz.simek.jgeck.model.format.frm.ColorCycleOffset;
+import xyz.simek.jgeck.model.format.frm.FoPalette;
 
 /**
  * @author SlowhandFastfeet

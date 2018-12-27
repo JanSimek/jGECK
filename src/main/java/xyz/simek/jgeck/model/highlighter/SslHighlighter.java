@@ -1,4 +1,4 @@
-package xyz.simek.jgeck.model;
+package xyz.simek.jgeck.model.highlighter;
 
 import java.util.Collection;
 import java.util.Collections;

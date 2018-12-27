@@ -1,5 +1,7 @@
 package xyz.simek.jgeck.model;
 
+import xyz.simek.jgeck.model.format.dat.FalloutFile;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -17,7 +19,7 @@ public class DatFile {
 	private int filetreeSize;
 	private int totalFiles;
 
-	private Map<String, DatItem> items = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+	private Map<String, FalloutFile> items = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 	private ByteBuffer buffer;
 
 	public DatFile(String filename) throws IOException {
@@ -49,22 +51,22 @@ public class DatFile {
 
 			for (int i = 0; i < totalFiles; i++) {
 
-				DatItem item = new DatItem();
+				FalloutFile item = new FalloutFile();
 				item.setNameLength(buffer.getInt());
-				item.setName(getFromBuffer(item.getNameLength()));
+				item.setFilename(getFromBuffer(item.getNameLength()));
 				item.setCompressed(buffer.get() == 0 ? false : true);
 				item.setUnpackedSize(buffer.getInt());
 				item.setPackedSize(buffer.getInt());
 				item.setOffset(buffer.getInt());
 				item.setDatFile(this);
 
-				items.put(item.getName(), item);
+				items.put(item.getFilename(), item);
 				//System.out.println("item " + (i+1) + " of " + totalFiles);
 			}
 		}
 	}
 	
-	public byte[] getItemData(DatItem item) throws DataFormatException, IOException {
+	public byte[] getItemData(FalloutFile item) throws DataFormatException, IOException {
 
 		byte[] data = new byte[item.getPackedSize()];
 
@@ -133,11 +135,11 @@ public class DatFile {
 		this.totalFiles = totalFiles;
 	}
 
-	public Map<String, DatItem> getItems() {
+	public Map<String, FalloutFile> getItems() {
 		return items;
 	}
 
-	public void setItems(Map<String, DatItem> items) {
+	public void setItems(Map<String, FalloutFile> items) {
 		this.items = items;
 	}
 

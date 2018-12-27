@@ -3,8 +3,8 @@ package xyz.simek.jgeck.controller;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import xyz.simek.jgeck.model.format.FrmFrame;
-import xyz.simek.jgeck.model.format.FrmHeader;
+import xyz.simek.jgeck.model.format.frm.FrmFrame;
+import xyz.simek.jgeck.model.format.frm.FrmHeader;
 
 public class FrmFileReader {
 

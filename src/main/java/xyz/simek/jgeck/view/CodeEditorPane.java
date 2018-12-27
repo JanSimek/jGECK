@@ -5,25 +5,37 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 
 import javafx.scene.layout.BorderPane;
-import xyz.simek.jgeck.model.Highlighter;
-import xyz.simek.jgeck.model.IniHighlighter;
+import xyz.simek.jgeck.model.highlighter.Highlighter;
+import xyz.simek.jgeck.model.highlighter.IniHighlighter;
 
 public class CodeEditorPane extends BorderPane {
 
 	private CodeArea codeEditor = new CodeArea();
 	private Highlighter highlighter;
-	
-	public CodeEditorPane(String text) {
+
+	public enum Format {
+		INI, TXT, SSL
+	}
+	public CodeEditorPane(Format format, String text) {
 
 		try {
 	        VirtualizedScrollPane<CodeArea> vPane = new VirtualizedScrollPane<>(codeEditor);
 
+			switch (format) {
+				case INI:
+					highlighter = new IniHighlighter(codeEditor);
+					codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
+					break;
+				case SSL:
+					codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
+					break;
+				case TXT:
+					break;
+			}
 
-			codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
+			if(highlighter != null)
+				highlighter.highlight();
 
-	        highlighter = new IniHighlighter(codeEditor);        
-	        highlighter.highlight();
-	        
 	        codeEditor.replaceText(text);
 	        			        
 			vPane.scrollToPixel(0.0, 0.0);
@@ -31,7 +43,7 @@ public class CodeEditorPane extends BorderPane {
 			this.setCenter(vPane);
 			
 		} finally {
-			
+
 		}
 		//catch (DataFormatException | IOException ex) {
 		//	setInfoMessage("Could not get item data: " + ex.getMessage(), Color.RED);

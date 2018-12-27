@@ -1,4 +1,4 @@
-package xyz.simek.jgeck.model.format;
+package xyz.simek.jgeck.model.format.rix;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

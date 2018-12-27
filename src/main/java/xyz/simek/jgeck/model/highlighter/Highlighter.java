@@ -1,4 +1,4 @@
-package xyz.simek.jgeck.model;
+package xyz.simek.jgeck.model.highlighter;
 
 import java.time.Duration;
 import java.util.Collection;
