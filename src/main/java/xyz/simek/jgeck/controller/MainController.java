@@ -1,20 +1,21 @@
 package xyz.simek.jgeck.controller;
 
-import javafx.concurrent.Task;
+import javafx.animation.FadeTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import org.controlsfx.glyphfont.Glyph;
-import org.controlsfx.glyphfont.GlyphFont;
-import org.controlsfx.glyphfont.GlyphFontRegistry;
+import javafx.util.Duration;
+import xyz.simek.jgeck.controller.service.DatLoaderService;
 import xyz.simek.jgeck.model.DatFile;
 import xyz.simek.jgeck.model.format.dat.FalloutDatItem;
 import xyz.simek.jgeck.model.format.dat.FalloutDirectory;
@@ -48,19 +49,6 @@ public class MainController implements Initializable {
 
     @FXML
     private BorderPane mainPane;
-
-    private GlyphFont fontAwesome = GlyphFontRegistry.font("FontAwesome");
-
-    private final Glyph iconFolder = fontAwesome.create("FOLDER");
-    private final Glyph iconSound = fontAwesome.create("FILE_SOUND_ALT");
-    private final Glyph iconMovie = fontAwesome.create("FILE_MOVIE_ALT");
-    private final Glyph iconImage = fontAwesome.create("FILE_IMAGE_ALT");
-    private final Glyph iconFont = fontAwesome.create("FONT");
-    private final Glyph iconCode = fontAwesome.create("FILE_CODE_ALT");
-    private final Glyph iconGear = fontAwesome.create("GEAR");
-    private final Glyph iconMap = fontAwesome.create("MAP_MARKER");
-    private final Glyph iconText = fontAwesome.create("FILE_TEXT");
-    private final Glyph iconFile = fontAwesome.create("FILE");
 
     private DatFile datFile = null;
 
@@ -226,53 +214,26 @@ public class MainController implements Initializable {
 
         //Collections.sort(sortedFiles, Comparator.comparing(FalloutFile::getFilename, String.CASE_INSENSITIVE_ORDER));
 
-        Task task = new Task<Void>() {
+        DatLoaderService datLoaderService = new DatLoaderService(fileTree, datFile);
 
-            @Override
-            protected Void call() throws Exception {
+        final VBox vBox = new VBox();
+        Label loadingText = new Label("Reading DAT file");
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+        progressIndicator.progressProperty().bind(datLoaderService.progressProperty());
+        vBox.setSpacing(5);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.getChildren().addAll(loadingText, progressIndicator);
+        mainPane.setCenter(vBox);
 
-                List<FalloutFile> sortedFiles = new ArrayList<>(datFile.getItems().values());
-                sortedFiles.forEach((file) -> {
+        datLoaderService.start();
+        datLoaderService.setOnSucceeded(e -> {
+            FadeTransition ft = new FadeTransition(Duration.millis(3000), vBox);
+            ft.setFromValue(1.0);
+            ft.setToValue(0.0);
+            ft.play();
+            ft.setOnFinished(ev -> mainPane.getChildren().remove(vBox));
+        });
 
-                    TreeItem<FalloutDatItem> current = root;
-
-                    for (String component : file.getFilename().split("\\\\")) {
-                        current.getChildren().sort((i1, i2) -> Boolean.compare(i2.getValue() instanceof FalloutDirectory, i1.getValue() instanceof FalloutDirectory));
-                        if (file.getFilename().endsWith(component)) {
-                            // FILE
-                            current.getChildren().add(new TreeItem<>(file, getIconForFile(file.getFilename())));
-                        } else {
-                            // FOLDER
-                            current = getOrCreateDir(current, component);
-                        }
-                    }
-                });
-                return null;
-            }
-        };
-
-        new Thread(task).start();
-    }
-
-    /**
-     * Helper method for creating hierarchical representation of folder within the DAT archive
-     *
-     * @param parent    Parent folder
-     * @param subfolder Current subfolder
-     * @return item if it already exists or creates a new subitem
-     */
-    private TreeItem<FalloutDatItem> getOrCreateDir(TreeItem<FalloutDatItem> parent, String subfolder) {
-
-        // Is the directory already present in the file tree?
-        for (TreeItem<FalloutDatItem> child : parent.getChildren()) {
-            if (child.getValue().getFilename().endsWith(subfolder)) {
-                return child;
-            }
-        }
-
-        TreeItem<FalloutDatItem> newChild = new TreeItem<>(new FalloutDirectory(subfolder), getIconForFile(subfolder));
-        parent.getChildren().add(newChild);
-        return newChild;
     }
 
     /**
@@ -287,60 +248,6 @@ public class MainController implements Initializable {
             return "";
         }
         return filename.substring(filename.lastIndexOf(".") + 1).toUpperCase();
-    }
-
-    private Glyph getIconForFile(String filename) {
-
-        Glyph icon;
-
-        switch (getFileExtension(filename)) {
-            case "":
-                icon = iconFolder.duplicate();
-                break;
-            case "ACM":
-                icon = iconSound.duplicate();
-                break;
-            case "MVE":
-                icon = iconMovie.duplicate();
-                break;
-            case "FRM":
-            case "PRO":
-            case "RIX":
-            case "PAL":
-                icon = iconImage.duplicate();
-                break;
-            case "AAF":
-            case "FON":
-                icon = iconFont.duplicate();
-                break;
-            case "SSL":
-                icon = iconCode.duplicate();
-                break;
-            case "INT":
-                icon = iconGear.duplicate();
-                break;
-            case "MAP":
-            case "MSK":
-                icon = iconMap.duplicate();
-                break;
-            case "GAM":
-            case "LST":
-            case "MSG":
-            case "SVE":
-            case "TXT":
-            case "BAK":
-            case "BIO":
-                icon = iconText.duplicate();
-                break;
-            case "CFG":
-            case "GCD":
-            case "LIP":
-            default:
-                icon = iconFile.duplicate();
-                break;
-        }
-
-        return icon;
     }
 
     @FXML
