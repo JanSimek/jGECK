@@ -8,180 +8,180 @@ import java.util.Map;
 
 public class MapFormat {
 
-	private int version; // F1 = 19, F2 = 20
-	private String name;
-	private int playerPos;
-	private int defaultElevation;
-	private int playerOrientation;
-	private int numLocalVars;
-	
-	/**
-	 * Value of -1 means no map. Text string is found in MSG file scrname.msg at index [id + 101].
-	 */
-	private int scriptId; 
-	
-	/**
-	 * If (flag & 0x1) == 0 then ?? unknown.
-	 * If (flag & 0x2) == 0 then the map has an defaultElevation at level 0.
-	 * If (flag & 0x4) == 0 then the map has an defaultElevation at level 1.
-	 * If (flag & 0x8) == 0 then the map has an defaultElevation at level 2.
-	 */
-	private int elevations = 0;
-	//private int darkness; // UNUSED
-	private int numGlobalVars;
-	private int mapId;
-	/*
-	 	Fallout 1: Map filename found in map.msg
-		Fallout 2: Map details found in data/maps.txt in section [Map id]
-	*/
-	private int timeSinceEpoch;
+    private int version; // F1 = 19, F2 = 20
+    private String name;
+    private int playerPos;
+    private int defaultElevation;
+    private int playerOrientation;
+    private int numLocalVars;
 
-	private Map<Integer,List<Short>> tiles = new HashMap<>();
-	
-	
-	public Map<Integer, List<Short>> getTiles() {
-		return tiles;
-	}
+    /**
+     * Value of -1 means no map. Text string is found in MSG file scrname.msg at index [id + 101].
+     */
+    private int scriptId;
 
-	public void setTiles(Map<Integer, List<Short>> tiles) {
-		this.tiles = tiles;
-	}
+    /**
+     * If (flag & 0x1) == 0 then ?? unknown.
+     * If (flag & 0x2) == 0 then the map has an defaultElevation at level 0.
+     * If (flag & 0x4) == 0 then the map has an defaultElevation at level 1.
+     * If (flag & 0x8) == 0 then the map has an defaultElevation at level 2.
+     */
+    private int elevations = 0;
+    //private int darkness; // UNUSED
+    private int numGlobalVars;
+    private int mapId;
+    /*
+         Fallout 1: Map filename found in map.msg
+        Fallout 2: Map details found in data/maps.txt in section [Map id]
+    */
+    private int timeSinceEpoch;
 
-	public String getName() {
-		return name;
-	}
+    private Map<Integer, List<Short>> tiles = new HashMap<>();
 
-	public void setName(String name) {
-		this.name = name;
-	}
 
-	public int getPlayerPos() {
-		return playerPos;
-	}
+    public Map<Integer, List<Short>> getTiles() {
+        return tiles;
+    }
 
-	public void setPlayerPos(int playerPos) {
-		this.playerPos = playerPos;
-	}
+    public void setTiles(Map<Integer, List<Short>> tiles) {
+        this.tiles = tiles;
+    }
 
-	public int getDefaultElevation() {
-		return defaultElevation;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setDefaultElevation(int defaultElevation) {
-		this.defaultElevation = defaultElevation;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public int getPlayerOrientation() {
-		return playerOrientation;
-	}
+    public int getPlayerPos() {
+        return playerPos;
+    }
 
-	public void setPlayerOrientation(int playerOrientation) {
-		this.playerOrientation = playerOrientation;
-	}
+    public void setPlayerPos(int playerPos) {
+        this.playerPos = playerPos;
+    }
 
-	public int getNumLocalVars() {
-		return numLocalVars;
-	}
+    public int getDefaultElevation() {
+        return defaultElevation;
+    }
 
-	public void setNumLocalVars(int numLocalVars) {
-		this.numLocalVars = numLocalVars;
-	}
+    public void setDefaultElevation(int defaultElevation) {
+        this.defaultElevation = defaultElevation;
+    }
 
-	public int getScriptId() {
-		return scriptId;
-	}
+    public int getPlayerOrientation() {
+        return playerOrientation;
+    }
 
-	public void setScriptId(int scriptId) {
-		this.scriptId = scriptId;
-	}
+    public void setPlayerOrientation(int playerOrientation) {
+        this.playerOrientation = playerOrientation;
+    }
 
-	public int getElevations() {
-		return elevations;
-	}
+    public int getNumLocalVars() {
+        return numLocalVars;
+    }
 
-	public void setElevations(int elevations) {
-		this.elevations = elevations;
-	}
+    public void setNumLocalVars(int numLocalVars) {
+        this.numLocalVars = numLocalVars;
+    }
 
-	public int getNumGlobalVars() {
-		return numGlobalVars;
-	}
+    public int getScriptId() {
+        return scriptId;
+    }
 
-	public void setNumGlobalVars(int numGlobalVars) {
-		this.numGlobalVars = numGlobalVars;
-	}
+    public void setScriptId(int scriptId) {
+        this.scriptId = scriptId;
+    }
 
-	public int getMapId() {
-		return mapId;
-	}
+    public int getElevations() {
+        return elevations;
+    }
 
-	public void setMapId(int mapId) {
-		this.mapId = mapId;
-	}
+    public void setElevations(int elevations) {
+        this.elevations = elevations;
+    }
 
-	public int getTimeSinceEpoch() {
-		return timeSinceEpoch;
-	}
+    public int getNumGlobalVars() {
+        return numGlobalVars;
+    }
 
-	public void setTimeSinceEpoch(int timeSinceEpoch) {
-		this.timeSinceEpoch = timeSinceEpoch;
-	}
+    public void setNumGlobalVars(int numGlobalVars) {
+        this.numGlobalVars = numGlobalVars;
+    }
 
-	public void read(ByteBuffer buff) {
+    public int getMapId() {
+        return mapId;
+    }
 
-		version = buff.getInt();
-		if(version == 19) {
-			System.err.println("Fallout 1 maps are not supported yet");
-			return;
-		}
-		if(version != 20) {
-			System.err.println("Unknown map version: " + version);
-			return;
-		}
-		
-		byte[] nameBytes = new byte[16];
-		buff.get(nameBytes);
-		name = new String(nameBytes);
-		System.out.println("Map name: " + name);
-		
-		playerPos = buff.getInt();
-		defaultElevation = buff.getInt();
-		playerOrientation = buff.getInt();
-		numLocalVars = buff.getInt();
-		scriptId = buff.getInt();
-		
-		int elevationFlags = buff.getInt();
-		if((elevationFlags & 2) == 0) elevations++;
-		if((elevationFlags & 4) == 0) elevations++;
-		if((elevationFlags & 8) == 0) elevations++;
-		
-		//darkness = buff.getInt(); // Unused
-		buff.getInt();
-		
-		numGlobalVars = buff.getInt();
-		mapId = buff.getInt();
-		timeSinceEpoch = buff.getInt();
-		
-		buff.position(buff.position() + 4*44); // Unknown
-		
-		// TODO: skip global vars
-		buff.position(buff.position() + 4*numGlobalVars);
-		// TODO: skip local vars
-		buff.position(buff.position() + 4*numLocalVars);
-				
-		// TILES
-		System.out.println("Elevations: " + elevations);
-		for(int elevation = 0; elevation < elevations; elevation++) {
-			tiles.put(elevation, new ArrayList<>());
-			
-			// 100 * 100 tiles
-			for(int i = 0; i < 10000; i++) {
-				
-				// FIXME: skip roof for now
-				buff.getShort();
-				Short tile = buff.getShort();
-				tiles.get(elevation).add(tile);
-			}
-		}
-	}
+    public void setMapId(int mapId) {
+        this.mapId = mapId;
+    }
+
+    public int getTimeSinceEpoch() {
+        return timeSinceEpoch;
+    }
+
+    public void setTimeSinceEpoch(int timeSinceEpoch) {
+        this.timeSinceEpoch = timeSinceEpoch;
+    }
+
+    public void read(ByteBuffer buff) {
+
+        version = buff.getInt();
+        if (version == 19) {
+            System.err.println("Fallout 1 maps are not supported yet");
+            return;
+        }
+        if (version != 20) {
+            System.err.println("Unknown map version: " + version);
+            return;
+        }
+
+        byte[] nameBytes = new byte[16];
+        buff.get(nameBytes);
+        name = new String(nameBytes);
+        System.out.println("Map name: " + name);
+
+        playerPos = buff.getInt();
+        defaultElevation = buff.getInt();
+        playerOrientation = buff.getInt();
+        numLocalVars = buff.getInt();
+        scriptId = buff.getInt();
+
+        int elevationFlags = buff.getInt();
+        if ((elevationFlags & 2) == 0) elevations++;
+        if ((elevationFlags & 4) == 0) elevations++;
+        if ((elevationFlags & 8) == 0) elevations++;
+
+        //darkness = buff.getInt(); // Unused
+        buff.getInt();
+
+        numGlobalVars = buff.getInt();
+        mapId = buff.getInt();
+        timeSinceEpoch = buff.getInt();
+
+        buff.position(buff.position() + 4 * 44); // Unknown
+
+        // TODO: skip global vars
+        buff.position(buff.position() + 4 * numGlobalVars);
+        // TODO: skip local vars
+        buff.position(buff.position() + 4 * numLocalVars);
+
+        // TILES
+        System.out.println("Elevations: " + elevations);
+        for (int elevation = 0; elevation < elevations; elevation++) {
+            tiles.put(elevation, new ArrayList<>());
+
+            // 100 * 100 tiles
+            for (int i = 0; i < 10000; i++) {
+
+                // FIXME: skip roof for now
+                buff.getShort();
+                Short tile = buff.getShort();
+                tiles.get(elevation).add(tile);
+            }
+        }
+    }
 }

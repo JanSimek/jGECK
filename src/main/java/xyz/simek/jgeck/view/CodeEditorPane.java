@@ -10,43 +10,44 @@ import xyz.simek.jgeck.model.highlighter.IniHighlighter;
 
 public class CodeEditorPane extends BorderPane {
 
-	private CodeArea codeEditor = new CodeArea();
-	private Highlighter highlighter;
+    private CodeArea codeEditor = new CodeArea();
+    private Highlighter highlighter;
 
-	public enum Format {
-		INI, TXT, SSL
-	}
-	public CodeEditorPane(Format format, String text) {
+    public enum Format {
+        INI, TXT, SSL
+    }
 
-		try {
-	        VirtualizedScrollPane<CodeArea> vPane = new VirtualizedScrollPane<>(codeEditor);
+    public CodeEditorPane(Format format, String text) {
 
-			switch (format) {
-				case INI:
-					highlighter = new IniHighlighter(codeEditor);
-					codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
-					break;
-				case SSL:
-					codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
-					break;
-				case TXT:
-					break;
-			}
+        try {
+            VirtualizedScrollPane<CodeArea> vPane = new VirtualizedScrollPane<>(codeEditor);
 
-			if(highlighter != null)
-				highlighter.highlight();
+            switch (format) {
+                case INI:
+                    highlighter = new IniHighlighter(codeEditor);
+                    codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
+                    break;
+                case SSL:
+                    codeEditor.setParagraphGraphicFactory(LineNumberFactory.get(codeEditor));
+                    break;
+                case TXT:
+                    break;
+            }
 
-	        codeEditor.replaceText(text);
-	        			        
-			vPane.scrollToPixel(0.0, 0.0);
-			
-			this.setCenter(vPane);
-			
-		} finally {
+            if (highlighter != null)
+                highlighter.highlight();
 
-		}
-		//catch (DataFormatException | IOException ex) {
-		//	setInfoMessage("Could not get item data: " + ex.getMessage(), Color.RED);
-		//}
-	}
+            codeEditor.replaceText(text);
+
+            vPane.scrollToPixel(0.0, 0.0);
+
+            this.setCenter(vPane);
+
+        } finally {
+
+        }
+        //catch (DataFormatException | IOException ex) {
+        //	setInfoMessage("Could not get item data: " + ex.getMessage(), Color.RED);
+        //}
+    }
 }

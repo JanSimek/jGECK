@@ -4,7 +4,7 @@ import javafx.scene.layout.Pane;
 
 public class MapPane extends Pane {
 
-	public MapPane() {
-		
-	}
+    public MapPane() {
+
+    }
 }

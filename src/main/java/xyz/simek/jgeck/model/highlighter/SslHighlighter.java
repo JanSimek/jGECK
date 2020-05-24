@@ -1,22 +1,22 @@
 package xyz.simek.jgeck.model.highlighter;
 
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyleSpansBuilder;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyleSpansBuilder;
-
 public class SslHighlighter extends Highlighter {
-	
-	public SslHighlighter(CodeArea codeArea) {
-		super(codeArea);
-	}
 
-	// TODO: SSL syntax
-    private static final String[] KEYWORDS = new String[] {
+    public SslHighlighter(CodeArea codeArea) {
+        super(codeArea);
+    }
+
+    // TODO: SSL syntax
+    private static final String[] KEYWORDS = new String[]{
             "procedure", "begin", "end"
     };
 
@@ -32,31 +32,32 @@ public class SslHighlighter extends Highlighter {
 
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-            + "|(?<PAREN>" + PAREN_PATTERN + ")"
-            + "|(?<BRACE>" + BRACE_PATTERN + ")"
-            + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
-            + "|(?<KEY>" + KEY_PATTERN + ")"
-            + "|(?<VALUE>" + VALUE_PATTERN + ")"
-            + "|(?<STRING>" + STRING_PATTERN + ")"
-            + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
+                    + "|(?<PAREN>" + PAREN_PATTERN + ")"
+                    + "|(?<BRACE>" + BRACE_PATTERN + ")"
+                    + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
+                    + "|(?<KEY>" + KEY_PATTERN + ")"
+                    + "|(?<VALUE>" + VALUE_PATTERN + ")"
+                    + "|(?<STRING>" + STRING_PATTERN + ")"
+                    + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
     );
 
     @Override
-	protected StyleSpans<Collection<String>> computeHighlighting(final String text) {
+    protected StyleSpans<Collection<String>> computeHighlighting(final String text) {
         Matcher matcher = PATTERN.matcher(text);
         int lastKwEnd = 0;
         StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
-        while(matcher.find()) {
+        while (matcher.find()) {
             String styleClass =
                     matcher.group("KEYWORD") != null ? "keyword" :
-                    matcher.group("PAREN") != null ? "paren" :
-                    matcher.group("BRACE") != null ? "brace" :
-                    matcher.group("BRACKET") != null ? "bracket" :
-                    matcher.group("KEY") != null ? "key" :
-                    matcher.group("VALUE") != null ? "value" :
-                    matcher.group("STRING") != null ? "string" :
-                    matcher.group("COMMENT") != null ? "comment" :
-                    null; /* never happens */ assert styleClass != null;
+                            matcher.group("PAREN") != null ? "paren" :
+                                    matcher.group("BRACE") != null ? "brace" :
+                                            matcher.group("BRACKET") != null ? "bracket" :
+                                                    matcher.group("KEY") != null ? "key" :
+                                                            matcher.group("VALUE") != null ? "value" :
+                                                                    matcher.group("STRING") != null ? "string" :
+                                                                            matcher.group("COMMENT") != null ? "comment" :
+                                                                                    null; /* never happens */
+            assert styleClass != null;
             spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
             spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
             lastKwEnd = matcher.end();

@@ -13,181 +13,181 @@ import java.util.zip.Inflater;
 
 public class DatFile {
 
-	private String filename;
-	private int savedSize;
-	private int realSize;
-	private int filetreeSize;
-	private int totalFiles;
+    private String filename;
+    private int savedSize;
+    private int realSize;
+    private int filetreeSize;
+    private int totalFiles;
 
-	private Map<String, FalloutFile> items = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-	private ByteBuffer buffer;
+    private Map<String, FalloutFile> items = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private ByteBuffer buffer;
 
-	public DatFile(String filename) throws IOException {
+    public DatFile(String filename) throws IOException {
 
-		this.filename = filename;
-		
-		init();
-	}
-	
-	private void init() throws IOException {
-		try (FileInputStream stream = new FileInputStream(getFilename())) {
-			
-			this.setRealSize((int) stream.getChannel().size());
-			this.buffer = ByteBuffer.allocate(getRealSize());
-			this.buffer.order(ByteOrder.LITTLE_ENDIAN);
-			stream.getChannel().read(buffer);
+        this.filename = filename;
 
-			buffer.position(getRealSize() - 4);
-			setSavedSize(buffer.getInt());
-			System.out.println("Saved size:    " + getSavedSize());
-			System.out.println("Real size:     " + getRealSize());
+        init();
+    }
 
-			buffer.position(getRealSize() - 8);
-			setFiletreeSize(buffer.getInt());
-			System.out.println("Filetree size: " + filetreeSize);
+    private void init() throws IOException {
+        try (FileInputStream stream = new FileInputStream(getFilename())) {
 
-			buffer.position(getRealSize() - filetreeSize - 8);
-			setTotalFiles(buffer.getInt());
+            this.setRealSize((int) stream.getChannel().size());
+            this.buffer = ByteBuffer.allocate(getRealSize());
+            this.buffer.order(ByteOrder.LITTLE_ENDIAN);
+            stream.getChannel().read(buffer);
 
-			for (int i = 0; i < totalFiles; i++) {
+            buffer.position(getRealSize() - 4);
+            setSavedSize(buffer.getInt());
+            System.out.println("Saved size:    " + getSavedSize());
+            System.out.println("Real size:     " + getRealSize());
 
-				FalloutFile item = new FalloutFile();
-				item.setNameLength(buffer.getInt());
-				item.setFilename(getFromBuffer(item.getNameLength()));
-				item.setCompressed(buffer.get() == 0 ? false : true);
-				item.setUnpackedSize(buffer.getInt());
-				item.setPackedSize(buffer.getInt());
-				item.setOffset(buffer.getInt());
-				item.setDatFile(this);
+            buffer.position(getRealSize() - 8);
+            setFiletreeSize(buffer.getInt());
+            System.out.println("Filetree size: " + filetreeSize);
 
-				items.put(item.getFilename(), item);
-				//System.out.println("item " + (i+1) + " of " + totalFiles);
-			}
-		}
-	}
-	
-	public byte[] getItemData(FalloutFile item) throws DataFormatException, IOException {
+            buffer.position(getRealSize() - filetreeSize - 8);
+            setTotalFiles(buffer.getInt());
 
-		byte[] data = new byte[item.getPackedSize()];
+            for (int i = 0; i < totalFiles; i++) {
 
-		buffer.position(item.getOffset());
-		buffer.get(data);
+                FalloutFile item = new FalloutFile();
+                item.setNameLength(buffer.getInt());
+                item.setFilename(getFromBuffer(item.getNameLength()));
+                item.setCompressed(buffer.get() == 0 ? false : true);
+                item.setUnpackedSize(buffer.getInt());
+                item.setPackedSize(buffer.getInt());
+                item.setOffset(buffer.getInt());
+                item.setDatFile(this);
 
-		if(!item.isCompressed())
-			return data;
-		
-		Inflater decompresser = new Inflater(); 
-		decompresser.setInput(data, 0, item.getPackedSize()); 
-		byte[] result = new byte[item.getUnpackedSize()]; 
-		int resultLength = decompresser.inflate(result); 
-		
-		if(resultLength != item.getUnpackedSize()) 
-			System.err.println("WRONG SIZE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		
-		decompresser.end();
-		return result;
-	}
-	
-	private String getFromBuffer(int bytes) {
-		byte[] barray = new byte[bytes];
-		this.buffer.get(barray);
+                items.put(item.getFilename(), item);
+                //System.out.println("item " + (i+1) + " of " + totalFiles);
+            }
+        }
+    }
 
-		return new String(barray);
-	}
+    public byte[] getItemData(FalloutFile item) throws DataFormatException, IOException {
 
-	public String getFilename() {
-		return filename;
-	}
+        byte[] data = new byte[item.getPackedSize()];
 
-	public void setFilename(String filename) {
-		this.filename = filename;
-	}
+        buffer.position(item.getOffset());
+        buffer.get(data);
 
-	public int getSavedSize() {
-		return savedSize;
-	}
+        if (!item.isCompressed())
+            return data;
 
-	public void setSavedSize(int savedSize) {
-		this.savedSize = savedSize;
-	}
+        Inflater decompresser = new Inflater();
+        decompresser.setInput(data, 0, item.getPackedSize());
+        byte[] result = new byte[item.getUnpackedSize()];
+        int resultLength = decompresser.inflate(result);
 
-	public int getRealSize() {
-		return realSize;
-	}
+        if (resultLength != item.getUnpackedSize())
+            System.err.println("WRONG SIZE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
-	public void setRealSize(int realSize) {
-		this.realSize = realSize;
-	}
+        decompresser.end();
+        return result;
+    }
 
-	public int getFiletreeSize() {
-		return filetreeSize;
-	}
+    private String getFromBuffer(int bytes) {
+        byte[] barray = new byte[bytes];
+        this.buffer.get(barray);
 
-	public void setFiletreeSize(int filetreeSize) {
-		this.filetreeSize = filetreeSize;
-	}
+        return new String(barray);
+    }
 
-	public int getTotalFiles() {
-		return totalFiles;
-	}
+    public String getFilename() {
+        return filename;
+    }
 
-	public void setTotalFiles(int totalFiles) {
-		this.totalFiles = totalFiles;
-	}
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
 
-	public Map<String, FalloutFile> getItems() {
-		return items;
-	}
+    public int getSavedSize() {
+        return savedSize;
+    }
 
-	public void setItems(Map<String, FalloutFile> items) {
-		this.items = items;
-	}
+    public void setSavedSize(int savedSize) {
+        this.savedSize = savedSize;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((filename == null) ? 0 : filename.hashCode());
-		result = prime * result + filetreeSize;
-		result = prime * result + ((items == null) ? 0 : items.hashCode());
-		result = prime * result + realSize;
-		result = prime * result + savedSize;
-		result = prime * result + totalFiles;
-		return result;
-	}
+    public int getRealSize() {
+        return realSize;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DatFile other = (DatFile) obj;
-		if (filename == null) {
-			if (other.filename != null)
-				return false;
-		} else if (!filename.equals(other.filename))
-			return false;
-		if (filetreeSize != other.filetreeSize)
-			return false;
-		if (items == null) {
-			if (other.items != null)
-				return false;
-		} else if (!items.equals(other.items))
-			return false;
-		if (realSize != other.realSize)
-			return false;
-		if (savedSize != other.savedSize)
-			return false;
-		if (totalFiles != other.totalFiles)
-			return false;
-		return true;
-	}
+    public void setRealSize(int realSize) {
+        this.realSize = realSize;
+    }
 
-	@Override
-	public String toString() {
-		return this.getFilename();
-	}
+    public int getFiletreeSize() {
+        return filetreeSize;
+    }
+
+    public void setFiletreeSize(int filetreeSize) {
+        this.filetreeSize = filetreeSize;
+    }
+
+    public int getTotalFiles() {
+        return totalFiles;
+    }
+
+    public void setTotalFiles(int totalFiles) {
+        this.totalFiles = totalFiles;
+    }
+
+    public Map<String, FalloutFile> getItems() {
+        return items;
+    }
+
+    public void setItems(Map<String, FalloutFile> items) {
+        this.items = items;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((filename == null) ? 0 : filename.hashCode());
+        result = prime * result + filetreeSize;
+        result = prime * result + ((items == null) ? 0 : items.hashCode());
+        result = prime * result + realSize;
+        result = prime * result + savedSize;
+        result = prime * result + totalFiles;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DatFile other = (DatFile) obj;
+        if (filename == null) {
+            if (other.filename != null)
+                return false;
+        } else if (!filename.equals(other.filename))
+            return false;
+        if (filetreeSize != other.filetreeSize)
+            return false;
+        if (items == null) {
+            if (other.items != null)
+                return false;
+        } else if (!items.equals(other.items))
+            return false;
+        if (realSize != other.realSize)
+            return false;
+        if (savedSize != other.savedSize)
+            return false;
+        if (totalFiles != other.totalFiles)
+            return false;
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return this.getFilename();
+    }
 }
