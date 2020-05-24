@@ -61,7 +61,7 @@ public class MainController implements Initializable {
         try {
             datFile = new DatFile(path);
         } catch (IOException ex) {
-            setInfoMessage("Could not open dat file: " + ex.getMessage(), Color.RED);
+            setInfoMessage("Could not open DAT file: " + ex.getMessage(), Color.RED);
             return;
         }
 
@@ -69,148 +69,8 @@ public class MainController implements Initializable {
         TreeItem<FalloutDatItem> root = new TreeItem<>();
         fileTree.setRoot(root);
 
-        fileTree.setOnMouseClicked(e -> {
-
-            TreeItem<FalloutDatItem> selected = fileTree.getSelectionModel().getSelectedItem();
-
-            if (selected == null || selected.getValue() instanceof FalloutDirectory)
-                return;
-
-            FalloutFile file = (FalloutFile) selected.getValue();
-
-            selectedFileLabel.setText(file.getFilename());
-
-            ByteBuffer buff = null;
-            try {
-                buff = ByteBuffer.wrap(file.getData());
-            } catch (DataFormatException | IOException ex) {
-                ex.printStackTrace();
-            }
-
-            String extension = getFileExtension(file.getFilename());
-            switch (extension) {
-                case "BIO":
-                    mainPane.setCenter(new CodeEditorPane(CodeEditorPane.Format.TXT, new String(buff.array())));
-                    break;
-                case "TXT":
-                case "MSG": // TODO: MsgHighlighter
-                case "SVE": // TODO: SveHighlighter
-                case "GAM": // TODO: GamHighlighter
-                case "BAK":
-                case "LST":
-                    mainPane.setCenter(new CodeEditorPane(CodeEditorPane.Format.INI, new String(buff.array())));
-                    break;
-
-                case "FRM":
-                    try (DataInputStream is = new DataInputStream(new ByteArrayInputStream(file.getData()))) {
-                        FrmHeader frm = FrmFileReader.readFrm(is);
-                        mainPane.setCenter(new ImagePane(frm.getImage(0, 0, true)));
-
-                    } catch (Exception ex) {
-                        setInfoMessage("Could not access item data: " + ex.getMessage(), Color.RED);
-                    }
-                    break;
-
-                case "RIX":
-
-                    RixImage rix = new RixImage();
-                    rix.read(buff);
-                    WritableImage img = new WritableImage(rix.getWidth(), rix.getHeight());
-                    PixelWriter pw = img.getPixelWriter();
-                    pw.setPixels(0, 0, rix.getWidth(), rix.getHeight(), PixelFormat.getIntArgbPreInstance(), rix.getData(), 0, rix.getWidth());
-
-                    mainPane.setCenter(new ImagePane(img));
-
-                    break;
-
-                case "MAP":
-                    // TODO: highlight selected: https://stackoverflow.com/questions/30625039/set-border-around-imageview-with-no-background-in-javafx
-
-                    MapFormat map = new MapFormat();
-                    map.read(buff);
-
-                    FalloutFile tileList = datFile.getItems().get("art\\tiles\\TILES.LST");
-
-                    ScrollPane sp = new ScrollPane();
-                    Pane tileMap = new Pane();
-
-                    try (BufferedReader bf = new BufferedReader(
-                            new InputStreamReader(new ByteArrayInputStream(tileList.getData())))) {
-
-                        String name;
-                        List<String> names = new ArrayList<>();
-                        while ((name = bf.readLine()) != null) {
-                            names.add(name);
-                        }
-
-                        map.getTiles().forEach((elevation, v) -> {
-
-                            Map<String, Image> tiles = new HashMap<>();
-
-                            for (int i = 0; i < 100 * 100; i++) {
-                                if (v.get(i) == 1) continue;
-
-                                //if(v.get(i) > names.size()) throw(...)
-
-                                FalloutFile tile = datFile.getItems().get("art\\tiles\\" + names.get(v.get(i)));
-
-                                Image image = tiles.get(names.get(v.get(i)));
-
-                                if (image == null) {
-                                    try (DataInputStream is = new DataInputStream(new ByteArrayInputStream(tile.getData()))) {
-
-                                        FrmHeader frm = FrmFileReader.readFrm(is);
-                                        image = frm.getImage(0, 0, false);
-                                        tiles.put(names.get(v.get(i)), image);
-                                    } catch (Exception ex) {
-                                        setInfoMessage("Could not access item data: " + ex.getMessage(), Color.RED);
-                                    }
-                                }
-
-                                ImageView tileView = new ImageView();
-                                tileView.setImage(image);
-
-                                int tileX = (int) Math.ceil(((double) i) / 100); // FIXME: possibly wrong
-                                int tileY = i % 100;
-                                int x = (100 - tileY - 1) * 48 + 32 * (tileX - 1);
-                                int y = tileX * 24 + (tileY - 1) * 12 + 1;
-
-                                tileView.setTranslateX(x);
-                                tileView.setTranslateY(y);
-                                tileMap.getChildren().add(tileView);
-                            }
-                        });
-
-                    } catch (IOException | DataFormatException e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
-                    }
-
-                    int w = 80 * 100;
-                    int h = 36 * 100;
-                    sp.setHvalue(h);
-                    sp.setVvalue(w);
-                    sp.setPannable(true);
-
-                    //sp.setFitToHeight(true);
-                    //sp.setHbarPolicy(ScrollBarPolicy.ALWAYS);
-                    //sp.setVbarPolicy(ScrollBarPolicy.ALWAYS);
-                    tileMap.setMinHeight(h);
-                    tileMap.setMinWidth(w);
-
-                    sp.setContent(tileMap);
-                    sp.setHvalue(0.5);
-                    sp.setVvalue(0.5);
-
-                    mainPane.setCenter(sp);
-
-                    break;
-
-                default:
-                    setInfoMessage("Preview for this filetype is not available.", Color.RED);
-                    break;
-            }
-        });
+        fileTree.setOnKeyReleased(e -> handleSelect());
+        fileTree.setOnMouseClicked(e -> handleSelect());
 
         //Collections.sort(sortedFiles, Comparator.comparing(FalloutFile::getFilename, String.CASE_INSENSITIVE_ORDER));
 
@@ -234,6 +94,148 @@ public class MainController implements Initializable {
             ft.setOnFinished(ev -> mainPane.getChildren().remove(vBox));
         });
 
+    }
+
+    private void handleSelect() {
+        TreeItem<FalloutDatItem> selected = fileTree.getSelectionModel().getSelectedItem();
+
+        if (selected == null || selected.getValue() instanceof FalloutDirectory)
+            return;
+
+        FalloutFile file = (FalloutFile) selected.getValue();
+
+        selectedFileLabel.setText(file.getFilename());
+
+        ByteBuffer buff = null;
+        try {
+            buff = ByteBuffer.wrap(file.getData());
+        } catch (DataFormatException | IOException ex) {
+            ex.printStackTrace();
+        }
+
+        String extension = getFileExtension(file.getFilename());
+        switch (extension) {
+            case "BIO":
+                mainPane.setCenter(new CodeEditorPane(CodeEditorPane.Format.TXT, new String(buff.array())));
+                break;
+            case "TXT":
+            case "MSG": // TODO: MsgHighlighter
+            case "SVE": // TODO: SveHighlighter
+            case "GAM": // TODO: GamHighlighter
+            case "BAK":
+            case "LST":
+                mainPane.setCenter(new CodeEditorPane(CodeEditorPane.Format.INI, new String(buff.array())));
+                break;
+
+            case "FRM":
+                try (DataInputStream is = new DataInputStream(new ByteArrayInputStream(file.getData()))) {
+                    FrmHeader frm = FrmFileReader.readFrm(is);
+                    mainPane.setCenter(new ImagePane(frm.getImage(0, 0, true)));
+
+                } catch (Exception ex) {
+                    setInfoMessage("Could not access item data: " + ex.getMessage(), Color.RED);
+                }
+                break;
+
+            case "RIX":
+
+                RixImage rix = new RixImage();
+                rix.read(buff);
+                WritableImage img = new WritableImage(rix.getWidth(), rix.getHeight());
+                PixelWriter pw = img.getPixelWriter();
+                pw.setPixels(0, 0, rix.getWidth(), rix.getHeight(), PixelFormat.getIntArgbPreInstance(), rix.getData(), 0, rix.getWidth());
+
+                mainPane.setCenter(new ImagePane(img));
+
+                break;
+
+            case "MAP":
+                // TODO: highlight selected: https://stackoverflow.com/questions/30625039/set-border-around-imageview-with-no-background-in-javafx
+
+                MapFormat map = new MapFormat();
+                map.read(buff);
+
+                FalloutFile tileList = datFile.getItems().get("art\\tiles\\TILES.LST");
+
+                ScrollPane sp = new ScrollPane();
+                Pane tileMap = new Pane();
+
+                try (BufferedReader bf = new BufferedReader(
+                        new InputStreamReader(new ByteArrayInputStream(tileList.getData())))) {
+
+                    String name;
+                    List<String> names = new ArrayList<>();
+                    while ((name = bf.readLine()) != null) {
+                        names.add(name);
+                    }
+
+                    map.getTiles().forEach((elevation, v) -> {
+
+                        Map<String, Image> tiles = new HashMap<>();
+
+                        for (int i = 0; i < 100 * 100; i++) {
+                            if (v.get(i) == 1) continue;
+
+                            //if(v.get(i) > names.size()) throw(...)
+
+                            FalloutFile tile = datFile.getItems().get("art\\tiles\\" + names.get(v.get(i)));
+
+                            Image image = tiles.get(names.get(v.get(i)));
+
+                            if (image == null) {
+                                try (DataInputStream is = new DataInputStream(new ByteArrayInputStream(tile.getData()))) {
+
+                                    FrmHeader frm = FrmFileReader.readFrm(is);
+                                    image = frm.getImage(0, 0, false);
+                                    tiles.put(names.get(v.get(i)), image);
+                                } catch (Exception ex) {
+                                    setInfoMessage("Could not access item data: " + ex.getMessage(), Color.RED);
+                                }
+                            }
+
+                            ImageView tileView = new ImageView();
+                            tileView.setImage(image);
+
+                            int tileX = (int) Math.ceil(((double) i) / 100); // FIXME: possibly wrong
+                            int tileY = i % 100;
+                            int x = (100 - tileY - 1) * 48 + 32 * (tileX - 1);
+                            int y = tileX * 24 + (tileY - 1) * 12 + 1;
+
+                            tileView.setTranslateX(x);
+                            tileView.setTranslateY(y);
+                            tileMap.getChildren().add(tileView);
+                        }
+                    });
+
+                } catch (IOException | DataFormatException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+
+                int w = 80 * 100;
+                int h = 36 * 100;
+                sp.setHvalue(h);
+                sp.setVvalue(w);
+                sp.setPannable(true);
+
+                //sp.setFitToHeight(true);
+                //sp.setHbarPolicy(ScrollBarPolicy.ALWAYS);
+                //sp.setVbarPolicy(ScrollBarPolicy.ALWAYS);
+                tileMap.setMinHeight(h);
+                tileMap.setMinWidth(w);
+
+                sp.setContent(tileMap);
+                sp.setHvalue(0.5);
+                sp.setVvalue(0.5);
+
+                mainPane.setCenter(sp);
+
+                break;
+
+            default:
+                setInfoMessage("Preview for this filetype is not available.", Color.RED);
+                break;
+        }
     }
 
     /**

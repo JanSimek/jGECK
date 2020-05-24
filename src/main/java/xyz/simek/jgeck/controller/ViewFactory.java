@@ -1,7 +1,5 @@
 package xyz.simek.jgeck.controller;
 
-import javax.naming.OperationNotSupportedException;
-
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -16,13 +14,13 @@ public class ViewFactory {
 	//private final String DEFAULT_CSS = "style.css";
 	private final String MAIN_FXML = "MainLayout.fxml"; 
 			
-	public Scene getMainScene() throws OperationNotSupportedException {
+	public Scene getMainScene() throws UnsupportedOperationException {
 		if(!mainViewInitialized) {
 			mainController = new MainController();
 			mainViewInitialized = true;
 			return initializeScene(MAIN_FXML, mainController);
 		} else {
-			throw new OperationNotSupportedException("Main scene already initialized");
+			throw new UnsupportedOperationException("Main scene already initialized");
 		}
 	}
 	

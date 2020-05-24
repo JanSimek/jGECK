@@ -155,7 +155,7 @@ public class DatLoaderService extends Service<Void> {
      * @return extension in UPPERCASE
      */
     private String getFileExtension(String filename) {
-        int dot = filename.lastIndexOf(".");
+        int dot = filename.lastIndexOf('.');
         if (dot == -1 || filename.length() < (dot + 1)) {
             return "";
         }

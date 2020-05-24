@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'application' // run
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+group = 'xyz.simek'
+version = '0.0.2-SNAPSHOT'
+sourceCompatibility = JavaVersion.VERSION_11
+
+// TODO: modularize (https://github.com/VocabHunter/VocabHunter/blob/master/gui/build.gradle)
+javafx {
+    version = '13.0.2'
+    modules = [ 'javafx.controls', 'javafx.fxml' ] //, 'javafx.swing'
+}
+
+dependencies {
+    implementation 'org.fxmisc.richtext:richtextfx:0.10.4'
+    implementation 'org.controlsfx:controlsfx:11.0.1'
+}
+
+mainClassName = 'xyz.simek.jgeck.Main'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+// TODO: remove once controlsfx fixes their package or I learn how to use Java module management
+application {
+    applicationDefaultJvmArgs =  [
+            "--add-opens=javafx.graphics/com.sun.javafx.css=ALL-UNNAMED",
+    ]
+}

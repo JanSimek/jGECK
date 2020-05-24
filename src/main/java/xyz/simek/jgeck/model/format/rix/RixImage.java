@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+// FIXME: RIX from the EDT Eclipse plugin
 public class RixImage {
 
 	private byte[] signature = new byte[4];
