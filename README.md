@@ -9,9 +9,9 @@ Garden of Eden Creation Kit - map editor for Fallout 2 (or one day it will be)
 
 ## Build and run
 
-**Using Maven:** From console using Maven: `mvn clean install exec:java`
+**Using Gradle:** From console using Gradle: `./gradlew clean build run` on *nix or `gradle.bat clean build run` on Windows
 
-**Using Eclipse:** In Eclipse run project as Maven build and add `exec:java` to Goals in the build Configuration
+**Using IntelliJ IDEA:** In IDEA run project as Gradle build and add `clean build run` to Tasks in the build Configuration
 
 ## FAQ
 
@@ -19,7 +19,7 @@ Garden of Eden Creation Kit - map editor for Fallout 2 (or one day it will be)
 
 An all-in-one package for Fallout 2 and [Falltergeist](https://github.com/falltergeist/falltergeist) modding including map and SSL script editor.
 
-### It's written in Java? What the hell?
+## Credits
 
-Yeah. I am on my way to becoming a Java developer and this is my practise project.
+Special thanks to the [Falltergeist](https://github.com/falltergeist/falltergeist) and [EVO](https://github.com/SlowhandFastfeet/FEV) projects.
 
